@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Thought Mirror</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      background: radial-gradient(circle at top right, #2E236C, #17153B);
+    }
+
+    .ai-hero {
+      min-height: 95vh;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      padding: 1rem 7rem;
+      color: #fff;
+      align-items: center;
+    }
+
+    .ai-left h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 3rem;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .gradient-text {
+      background: linear-gradient(90deg, #b16cea, #ff5e69, #ff8a56, #ffa84b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .ai-right {
+      max-width: 520px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .ai-right p {
+      font-family: 'Roboto', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 400;
+      color: #cfcfcf;
+      line-height: 1.6;
+    }
+
+    .ai-features {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .ai-features li {
+      margin-bottom: 0.8rem;
+      font-size: 1rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .ai-cta {
+      margin-top: 1.5rem;
+      padding: 0.8rem 1.5rem;
+      background: linear-gradient(90deg, #7f5af0, #6246ea);
+      border: none;
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .ai-cta:hover {
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 768px) {
+      .ai-hero {
+        flex-direction: column;
+        text-align: center;
+        padding: 2rem;
+      }
+
+      .ai-left h1 {
+        font-size: 2.2rem;
+      }
+
+      .ai-right {
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section class="ai-hero">
+    <div class="ai-left" id="aiLeft">
+      <h1>
+        Discover <br />
+        <span class="gradient-text">AI Thought Mirror</span><br />
+        for Mental Wellness
+      </h1>
+    </div>
+
+    <div class="ai-right" id="aiRight">
+      <p>
+        A platform where students speak or type journal entries, and AI mirrors back a summary of
+        their mood, hidden stress factors, and unspoken concerns — promoting self-awareness and emotional wellbeing.
+      </p>
+      <ul class="ai-features">
+        <li>🧠 Deep emotional inference using LLMs and psychology models</li>
+        <li>📊 Emotional evolution graphs over time</li>
+        <li>🏫 Sellable to colleges with anonymized mental wellness reports</li>
+      </ul>
+      <button class="ai-cta" onclick="window.location.href='/chat_page'">
+        Try It Now →
+      </button>
+    </div>
+  </section>
+
+  <script>
+    const aiLeft = document.getElementById('aiLeft');
+    const aiRight = document.getElementById('aiRight');
+
+    gsap.fromTo(aiLeft, {
+      opacity: 0,
+      x: "-200px",
+    }, {
+      opacity: 1,
+      x: 0,
+      duration: 2
+    });
+
+    gsap.fromTo(aiRight, {
+      y: "-200px",
+      opacity: 0,
+    }, {
+      duration: 2,
+      opacity: 1,
+      y: 0
+    });
+  </script>
+</body>
+</html>

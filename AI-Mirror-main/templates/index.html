@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}
+Emotional Chatbot
+{% endblock %}
+
+{% block styles %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<style>
+  /* Chat container scroll & layout */
+  .chat-container {
+    max-height: 70vh;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    padding: 1rem;
+  }
+
+  /* Generic chat message */
+  .message {
+    max-width: 75%;
+    margin: 10px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    line-height: 1.6;
+    font-size: 0.95rem;
+    word-wrap: break-word;
+    transition: all 0.2s ease-in-out;
+  }
+
+  /* Hover effect */
+  .message:hover {
+    transform: scale(1.02);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  /* User message styling */
+  .user-message {
+    background-color: #3b82f6;
+    color: white;
+    margin-left: auto;
+    position: relative;
+  }
+
+  .user-message::after {
+    content: "";
+    position: absolute;
+    right: -8px;
+    top: 10px;
+    border-width: 8px 0 8px 8px;
+    border-style: solid;
+    border-color: transparent transparent transparent #3b82f6;
+  }
+
+  /* Bot message styling */
+  .bot-message {
+    background-color: #e5e7eb;
+    color: #1f2937;
+    position: relative;
+  }
+
+  .bot-message::after {
+    content: "";
+    position: absolute;
+    left: -8px;
+    top: 10px;
+    border-width: 8px 8px 8px 0;
+    border-style: solid;
+    border-color: transparent #e5e7eb transparent transparent;
+  }
+
+  /* Input field */
+  #chat-input {
+    resize: none;
+  }
+
+  /* Mic active state */
+  .mic-active {
+    background-color: #ef4444 !important;
+    color: white !important;
+  }
+
+  /* Typing indicator */
+  .hidden {
+    display: none;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    background-color: #a3a3a3;
+    border-radius: 50%;
+    animation: bounce-delayed 1s infinite;
+  }
+
+  .dot:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .dot:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+
+  @keyframes bounce-delayed {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+</style>
+
+{% endblock %}
+
+{% block chatboti %}
+<div class="min-h-screen flex flex-col items-center bg-gradient-to-b from-indigo-100 to-purple-100 justify-center p-4" >
+  <div class="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-6">
+    <h1 class="text-3xl font-bold text-center text-indigo-600 mb-6">Emotional Chatbot</h1>
+
+    <!-- Chat box -->
+    <div id="chat-box" class="chat-container mb-4 bg-gray-50 rounded-lg">
+      {% for msg in chat_messages %}
+        <div class="message {{ 'user-message' if msg.sender == 'user' else 'bot-message' }}">
+          {{ msg.message | safe }}
+        </div>
+      {% endfor %}
+
+      <!-- Typing indicator -->
+      <div id="typing-indicator" class="bot-message message hidden flex items-center space-x-1">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+    </div>
+
+    <!-- Chat input & controls -->
+    <div class="flex items-center space-x-2">
+      <textarea
+        id="chat-input"
+        class="flex-1 p-3 border border-indigo-300 bg-white text-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm transition"
+        rows="2"
+        placeholder="Type your message..."></textarea>
+
+      <button id="send-btn"
+        class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transform hover:scale-105 transition">
+        Send
+      </button>
+
+      <button id="mic-btn"
+        class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transform hover:scale-105 transition"
+        title="Start/Stop Listening">
+        🎤
+      </button>
+
+      <button id="speak-btn"
+        class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transform hover:scale-105 transition"
+        title="Speak Last Response">
+        🔊
+      </button>
+
+      <button id="clear-btn"
+        class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transform hover:scale-105 transition">
+        Clear
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+  const chatBox = document.getElementById("chat-box");
+  const chatInput = document.getElementById("chat-input");
+  const sendBtn = document.getElementById("send-btn");
+  const micBtn = document.getElementById("mic-btn");
+  const speakBtn = document.getElementById("speak-btn");
+  const clearBtn = document.getElementById("clear-btn");
+  let lastBotResponse = "";
+
+  // Speech Recognition
+  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.lang = "en-US";
+  recognition.interimResults = false;
+  let isListening = false;
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    chatInput.value = transcript;
+    sendMessage();
+  };
+
+  recognition.onend = () => {
+    isListening = false;
+    micBtn.classList.remove("mic-active");
+    micBtn.textContent = "🎤";
+  };
+
+  micBtn.addEventListener("click", () => {
+    if (isListening) {
+      recognition.stop();
+    } else {
+      recognition.start();
+      isListening = true;
+      micBtn.classList.add("mic-active");
+      micBtn.textContent = "🛑";
+    }
+  });
+
+  // Text-to-Speech
+  speakBtn.addEventListener("click", () => {
+    if (lastBotResponse) {
+      const utterance = new SpeechSynthesisUtterance(lastBotResponse);
+      utterance.lang = "en-US";
+      window.speechSynthesis.speak(utterance);
+    }
+  });
+
+async function sendMessage() {
+  const message = chatInput.value.trim();
+  if (!message) return;
+
+  appendMessage("user", message);
+  chatInput.value = "";
+
+  // Show typing indicator
+  document.getElementById("typing-indicator").classList.remove("hidden");
+
+  try {
+    const response = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message }),
+    });
+    const data = await response.json();
+
+    // Hide typing indicator
+    document.getElementById("typing-indicator").classList.add("hidden");
+
+    if (data.reply) {
+      lastBotResponse = data.reply.replace(/<[^>]+>/g, "");
+      appendMessage("bot", data.reply);
+    } else {
+      appendMessage("bot", "No response from server.");
+    }
+  } catch (error) {
+    document.getElementById("typing-indicator").classList.add("hidden");
+    appendMessage("bot", "An error occurred. Please try again.");
+  }
+}
+
+
+  // Send button click
+  sendBtn.addEventListener("click", sendMessage);
+
+  // Enter key press
+  chatInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault(); // Prevent new line
+      sendMessage();
+    }
+  });
+
+  // Clear Chat
+  clearBtn.addEventListener("click", async () => {
+    try {
+      await fetch("/clear_chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      chatBox.innerHTML = "";
+    } catch (error) {
+      console.error("Error clearing chat:", error);
+    }
+  });
+
+  // Append Message to Chat
+  function appendMessage(sender, message) {
+    const messageDiv = document.createElement("div");
+    messageDiv.className = `message ${sender === "user" ? "user-message" : "bot-message"}`;
+    messageDiv.innerHTML = message;
+    chatBox.appendChild(messageDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  // Scroll to bottom on load
+  chatBox.scrollTop = chatBox.scrollHeight;
+</script>
+{% endblock %}
